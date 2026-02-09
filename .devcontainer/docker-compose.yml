@@ -15,7 +15,7 @@ services:
 
   wordpress:
     container_name: hewo-wp-auth
-    image: wordpress:6.9.1-php8.3-apache
+    build: .
     ports:
       - 8080:80
     environment:
