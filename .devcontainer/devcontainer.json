@@ -1,0 +1,19 @@
+{
+    "name": "wp-auth",
+    "dockerComposeFile": [
+        "docker-compose.yml"
+    ],
+    "service": "wordpress",
+    "workspaceFolder": "/code",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "devsense.phptools-vscode",
+                "editorconfig.editorconfig"
+            ]
+        }
+    },
+    "features": {
+        "ghcr.io/devcontainers/features/git": {}
+    }
+}

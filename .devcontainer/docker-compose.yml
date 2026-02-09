@@ -1,0 +1,49 @@
+services:
+  database:
+    container_name: hewo-wp-auth-db
+    image: mysql:8.4.6
+    environment:
+      MYSQL_ROOT_PASSWORD_FILE: /run/secrets/db-root-password
+      MYSQL_DATABASE: wp-auth
+      MYSQL_USER: wp-auth
+      MYSQL_PASSWORD_FILE: /run/secrets/db-password
+    volumes:
+      - database:/var/lib/mysql
+    secrets:
+      - db-root-password
+      - db-password
+
+  wordpress:
+    container_name: hewo-wp-auth
+    image: wordpress:6.9.1-php8.3-apache
+    ports:
+      - 8080:80
+    environment:
+      WORDPRESS_DB_HOST: database
+      WORDPRESS_DB_USER: wp-auth
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/db-password
+      WORDPRESS_DB_NAME: wp-auth
+
+      WORDPRESS_DEBUG: '1'
+      WORDPRESS_CONFIG_EXTRA: |
+        define( 'WP_DEBUG_LOG', true );
+        define( 'HEWO_WP_AUTH_DEBUG', true );
+    volumes:
+      - wordpress:/var/www/html
+      - ./load.php:/var/www/html/wp-content/mu-plugins/load.php:ro
+      - ../hewo-wp-auth:/var/www/html/wp-content/mu-plugins/hewo-wp-auth
+      - ../:/code
+    secrets:
+      - db-password
+
+secrets:
+  db-root-password:
+    file: ./secrets/db-root-password
+  db-password:
+    file: ./secrets/db-password
+
+volumes:
+  database:
+    name: hewo-wp-auth-db
+  wordpress:
+    name: hewo-wp-auth
