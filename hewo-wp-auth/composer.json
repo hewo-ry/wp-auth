@@ -1,0 +1,13 @@
+{
+    "require": {
+        "facile-it/php-openid-client": "^0.4.0"
+    },
+    "config": {
+        "allow-plugins": {
+            "php-http/discovery": true
+        },
+        "platform": {
+            "php": "8.3.38"
+        }
+    }
+}

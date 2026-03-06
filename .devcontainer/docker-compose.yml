@@ -28,15 +28,21 @@ services:
       WORDPRESS_CONFIG_EXTRA: |
         define( 'WP_DEBUG_LOG', true );
         define( 'HEWO_WP_AUTH_DEBUG', true );
+        define( 'HEWO_WP_AUTH_ISSUER', 'https://sso.hewo.fi/realms/hewo' );
+        define( 'HEWO_WP_AUTH_CLIENT_ID', 'wp-test' );
+        define( 'HEWO_WP_AUTH_CLIENT_SECRET', file_get_contents('/run/secrets/client-secret') );
     volumes:
       - wordpress:/var/www/html
       - ./load.php:/var/www/html/wp-content/mu-plugins/load.php:ro
       - ../hewo-wp-auth:/var/www/html/wp-content/mu-plugins/hewo-wp-auth
       - ../:/code
     secrets:
+      - client-secret
       - db-password
 
 secrets:
+  client-secret:
+    file: ./secrets/client-secret
   db-root-password:
     file: ./secrets/db-root-password
   db-password:
