@@ -1,0 +1,44 @@
+name: Create new release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Cache Composer packages
+      id: composer-cache
+      uses: actions/cache@v3
+      with:
+        path: hewo-wp-auth/vendor
+        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        restore-keys: |
+          ${{ runner.os }}-php-
+
+    - name: Install dependencies
+      working-directory: hewo-wp-auth
+      run: composer install --no-dev --no-progress --optimize-autoloader
+
+    - name: Build package
+      run: |
+        mkdir -p build/hewo-oidc-auth
+        cp hewo-wp-auth/*.php build/hewo-oidc-auth/
+        cp -r hewo-wp-auth/vendor build/hewo-oidc-auth/
+
+        cd build/
+        zip -r ../hewo-oidc-auth.zip hewo-oidc-auth/
+
+    - name: Create release
+      uses: softprops/action-gh-release@v3
+      with:
+        files: hewo-oidc-auth.zip
+        fail_on_unmatched_files: true
