@@ -60,7 +60,7 @@ function admin_menu(): void {
 function login_url() {
 	$login_url = OidcWrapper::instance()->getAuthorizationUrl();
 
-	log( 'Login url: ' . $login_url );
+	log( 'Created login url: ' . $login_url );
 
 	return $login_url;
 }

@@ -31,6 +31,7 @@ services:
         define( 'HEWO_WP_AUTH_ISSUER', 'https://sso.hewo.fi/realms/hewo' );
         define( 'HEWO_WP_AUTH_CLIENT_ID', 'wp-test' );
         define( 'HEWO_WP_AUTH_CLIENT_SECRET', file_get_contents('/run/secrets/client-secret') );
+        define( 'HEWO_WP_AUTH_USE_SSL', false );
     volumes:
       - wordpress:/var/www/html
       - ./load.php:/var/www/html/wp-content/mu-plugins/load.php:ro
@@ -38,6 +39,19 @@ services:
       - ../:/code
     secrets:
       - client-secret
+      - db-password
+
+  cli:
+    image: wordpress:cli
+    environment:
+      WORDPRESS_DB_HOST: database
+      WORDPRESS_DB_USER: wp-auth
+      WORDPRESS_DB_PASSWORD_FILE: /run/secrets/db-password
+      WORDPRESS_DB_NAME: wp-auth
+
+    volumes:
+      - wordpress:/var/www/html
+    secrets:
       - db-password
 
 secrets:
