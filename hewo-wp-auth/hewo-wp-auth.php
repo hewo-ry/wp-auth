@@ -21,6 +21,7 @@ namespace Hewo\WpAuth;
 
 require_once __DIR__ . '/vendor/autoload.php';
 
+require_once __DIR__ . '/endpoint.class.php';
 require_once __DIR__ . '/oidc-wrapper.class.php';
 require_once __DIR__ . '/utils.php';
 
@@ -43,6 +44,8 @@ function init_plugin(): void {
 	add_action( 'admin_menu', 'Hewo\WpAuth\admin_menu' );
 	add_action( 'login_url', 'Hewo\WpAuth\login_url' );
 	// TODO: override wp-login.php ?
+
+	add_action( 'rest_api_init', Endpoint::instance()->init( ... ) );
 }
 
 add_action( 'init', 'Hewo\WpAuth\init_plugin' );
