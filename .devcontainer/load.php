@@ -12,8 +12,8 @@
  *
  * @wordpress-plugin
  * Plugin Name:        Hewo WP Auth
- * Description:        TODO
- * Version:            0.0.0
+ * Description:        Replace WordPress's traditional login with OIDC-based authentication.
+ * Version:            0.1.0
  * Requires at least:  6.9.1
  * Requires PHP:       8.3.30
  * Author:             Ville Nupponen

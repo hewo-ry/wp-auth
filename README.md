@@ -2,6 +2,12 @@
 
 ## Kehittäminen
 
+Asenna kirjastot:
+
+```shell
+docker run --rm -it -v "$(pwd):/app" composer/composer install
+```
+
 ### Sovelluksen ajaminen Dev Containerilla
 
 1) Luo salaisuudet
@@ -10,6 +16,9 @@
 mkdir -p .devcontainer/secrets
 pwgen -s 64 1 | tr -d '\n' > .devcontainer/secrets/db-root-password
 pwgen -s 64 1 | tr -d '\n' > .devcontainer/secrets/db-password
+cat > .devcontainer/secrets/client-secret
+<paste client secret>
+^D
 ```
 
 2) Avaa projekti vscodessa
