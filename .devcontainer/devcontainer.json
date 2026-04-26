@@ -9,7 +9,8 @@
         "vscode": {
             "extensions": [
                 "devsense.phptools-vscode",
-                "editorconfig.editorconfig"
+                "editorconfig.editorconfig",
+                "github.vscode-github-actions"
             ]
         }
     },
