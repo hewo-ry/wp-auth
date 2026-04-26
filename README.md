@@ -30,3 +30,10 @@ Debug logeja saat seurattua esim.:
 ```shell
 docker exec -it hewo-wp-auth tail -f /var/www/html/wp-content/debug.log
 ```
+
+Tarvittaessa wp cli on käytettävissä:
+
+```bash
+cd .devcontainer
+docker compose -p wp-auth_devcontainer run --rm cli user list
+```

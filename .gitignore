@@ -1,3 +1,5 @@
 .devcontainer/secrets/
 
 vendor/
+
+.phpunit.result.cache

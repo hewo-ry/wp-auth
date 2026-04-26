@@ -1,0 +1,71 @@
+---
+name: Run tests
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  phpunit:
+    runs-on: ubuntu-24.04
+
+    concurrency:
+      group: test
+      cancel-in-progress: true
+
+    services:
+      mariadb:
+        image: mariadb:11.8.6
+        env:
+          MARIADB_RANDOM_ROOT_PASSWORD: 1
+          MARIADB_USER: wp-test
+          MARIADB_PASSWORD: yNWRI8HmfiTnnBXoZZizrNu92UNr3sTc
+          MARIADB_DATABASE: wp-test
+        ports:
+          - 3306:3306
+
+    strategy:
+      matrix:
+        php:
+          - '8.3'
+        worpress:
+          - 6.9.1
+
+    defaults:
+      run:
+        working-directory: hewo-wp-auth
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.2
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@2.37.0
+        with:
+          php-version: ${{ matrix.php }}
+
+      - name: Install svn
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y subversion
+
+      - name: Get composer cache directory
+        id: composer-cache
+        run: echo "dir=$(composer config cache-files-dir)" >> $GITHUB_OUTPUT
+
+      - name: Cache dependencies
+        uses: actions/cache@v5.0.5
+        with:
+          path: ${{ steps.composer-cache.outputs.dir }}
+          key: ${{ runner.os }}-composer-${{ hashFiles('**/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist
+
+      - name: Setup tests
+        run: bin/install-wp-tests.sh wp-test wp-test yNWRI8HmfiTnnBXoZZizrNu92UNr3sTc 127.0.0.1 ${{ matrix.worpress }} true
+
+      - name: Run tests
+        run: vendor/bin/phpunit
