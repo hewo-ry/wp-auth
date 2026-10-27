@@ -5,7 +5,7 @@
 Asenna kirjastot:
 
 ```shell
-docker run --rm -it -v "$(pwd):/app" composer/composer install
+docker run --rm -it -v "$(pwd)/hewo-wp-auth:/app" composer/composer install
 ```
 
 ### Sovelluksen ajaminen Dev Containerilla

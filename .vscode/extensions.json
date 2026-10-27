@@ -2,5 +2,5 @@
     "recommendations": [
         "editorconfig.editorconfig",
         "ms-vscode-remote.remote-containers",
-    ]
+    ],
 }
