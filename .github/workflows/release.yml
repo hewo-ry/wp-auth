@@ -30,15 +30,15 @@ jobs:
 
     - name: Build package
       run: |
-        mkdir -p build/hewo-oidc-auth
-        cp hewo-wp-auth/*.php build/hewo-oidc-auth/
-        cp -r hewo-wp-auth/vendor build/hewo-oidc-auth/
+        mkdir -p build/hewo-wp-auth
+        cp hewo-wp-auth/*.php build/hewo-wp-auth/
+        cp -r hewo-wp-auth/vendor build/hewo-wp-auth/
 
         cd build/
-        zip -r ../hewo-oidc-auth.zip hewo-oidc-auth/
+        zip -r ../hewo-wp-auth.zip hewo-wp-auth/
 
     - name: Create release
       uses: softprops/action-gh-release@v3
       with:
-        files: hewo-oidc-auth.zip
+        files: hewo-wp-auth.zip
         fail_on_unmatched_files: true
