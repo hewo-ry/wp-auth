@@ -92,6 +92,12 @@ final class OidcWrapper {
         $this->authSession = new WordPressAuthSession();
     }
 
+    public function getAllowedHosts(): array {
+        return [
+            wp_parse_url( $this->client->getIssuer()->getMetadata()->get( 'end_session_endpoint' ), PHP_URL_HOST ),
+        ];
+    }
+
     public function getAuthorizationUrl(): string {
         $this->authSession->setNonce( wp_generate_password( 32, false ) );
         $this->authSession->setState( wp_generate_password( 32, false ) );
@@ -103,6 +109,16 @@ final class OidcWrapper {
                     'state' => $this->authSession->getState(),
                 ]
             );
+    }
+
+    public function getLogoutUrl( int $userId ): string {
+        $end_session_endpoint = $this->client->getIssuer()->getMetadata()->get( 'end_session_endpoint' );
+        $logout_args = array(
+            'post_logout_redirect_uri' => home_url( '/' ),
+            'id_token_hint' => get_user_meta( $userId, 'oidc_id_token', true ),
+        );
+        $logout_url = add_query_arg( $logout_args, $end_session_endpoint );
+        return $logout_url;
     }
 
     public function handleCallback( WP_REST_Request $request ) {
@@ -142,6 +158,8 @@ final class OidcWrapper {
             wp_set_current_user( $user->ID, $user->user_login );
             wp_set_auth_cookie( $user->ID );
             do_action( 'wp_login', $user->user_login, $user );
+
+            update_user_meta( $user->ID, 'oidc_id_token', $tokenSet->getIdToken() );
 
             wp_safe_redirect( admin_url() );
             exit;
