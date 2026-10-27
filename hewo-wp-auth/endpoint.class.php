@@ -2,8 +2,6 @@
 
 namespace Hewo\WpAuth;
 
-use WP_REST_Request;
-
 final class Endpoint {
 
     private const NAMESPACE = 'hewo-auth/v0';

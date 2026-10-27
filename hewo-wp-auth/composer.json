@@ -1,6 +1,7 @@
 {
     "require": {
-        "facile-it/php-openid-client": "^1.0.0"
+        "facile-it/php-openid-client": "^1.0.0",
+        "phpfastcache/phpfastcache": "^9.2.4"
     },
     "config": {
         "allow-plugins": {

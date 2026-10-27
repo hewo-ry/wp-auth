@@ -3,16 +3,21 @@
 namespace Hewo\WpAuth;
 
 use Exception;
+use Facile\JoseVerifier\JWK\JwksProviderBuilder;
 use Facile\OpenIDClient\Client\ClientBuilder;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
 use Facile\OpenIDClient\Issuer\IssuerBuilder;
+use Facile\OpenIDClient\Issuer\Metadata\Provider\MetadataProviderBuilder;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Http\Discovery\Psr17Factory;
+use Jose\Component\Checker\InvalidClaimException;
+use Phpfastcache\Helper\Psr16Adapter;
 use Throwable;
 use WP_REST_Request;
+use WP_Roles;
 use WP_User;
 
 final class OidcWrapper {
@@ -23,6 +28,7 @@ final class OidcWrapper {
 
     private AuthorizationService $authorizationService;
     private ClientInterface $client;
+    private WordPressAuthSession $authSession;
 
     private bool $useSsl = true;
 
@@ -46,10 +52,20 @@ final class OidcWrapper {
 
         $openidConfigurationUrl = HEWO_WP_AUTH_ISSUER . '/.well-known/openid-configuration';
 
-        log( 'Fetch issuer details: ' . $openidConfigurationUrl );
+        log( 'Fetch issuer details (cache enabled): ' . $openidConfigurationUrl );
 
-        // TODO: cache?
+        $cache = new Psr16Adapter( 'Files' );
+
+        $metadataProviderBuilder = ( new MetadataProviderBuilder() )
+            ->setCache( $cache )
+            ->setCacheTtl( 3600 );
+        $jwksProviderBuilder = ( new JwksProviderBuilder() )
+            ->withCache( $cache )
+            ->withCacheTtl( 3600 );
+
         $issuer = ( new IssuerBuilder() )
+            ->setMetadataProviderBuilder( $metadataProviderBuilder )
+            ->setJwksProviderBuilder( $jwksProviderBuilder )
             ->build( $openidConfigurationUrl );
 
         log( 'Client ID: ' . HEWO_WP_AUTH_CLIENT_ID );
@@ -72,12 +88,20 @@ final class OidcWrapper {
 
         $this->authorizationService = ( new AuthorizationServiceBuilder() )
             ->build();
+
+        $this->authSession = new WordPressAuthSession();
     }
 
     public function getAuthorizationUrl(): string {
+        $this->authSession->setNonce( wp_generate_password( 32, false ) );
+        $this->authSession->setState( wp_generate_password( 32, false ) );
         return $this->authorizationService
             ->getAuthorizationUri(
                 $this->client,
+                [
+                    'nonce' => $this->authSession->getNonce(),
+                    'state' => $this->authSession->getState(),
+                ]
             );
     }
 
@@ -96,7 +120,16 @@ final class OidcWrapper {
                 ->getCallbackParams( $serverRequest, $this->client );
 
             $tokenSet = $this->authorizationService
-                ->callback( $this->client, $callbackParams );
+                ->callback( $this->client, $callbackParams, null, $this->authSession );
+
+            if ( $callbackParams['state'] !== $this->authSession->getState() )
+                throw new InvalidClaimException(
+                    sprintf( 'State mismatch, expected %s, got: %s', $this->authSession->getState(), (string) $callbackParams['state'] ),
+                    'state',
+                    $callbackParams['state']
+                );
+
+            $this->authSession->clear();
 
             $userInfo = ( new UserInfoServiceBuilder() )
                 ->build()
@@ -215,7 +248,13 @@ final class OidcWrapper {
     }
 
     private function parseRole( array $userInfo ): string {
-        // TODO
+        global $wp_roles;
+        /** @var WP_Roles $wp_roles */
+
+        foreach ( $userInfo['resource_access'][ $this->client->getMetadata()->getClientId()]['roles'] ?? [] as $role )
+            if ( $wp_roles->is_role( $role ) )
+                return $role;
+
         return 'subscriber';
     }
 }

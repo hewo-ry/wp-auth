@@ -24,6 +24,7 @@ require_once __DIR__ . '/vendor/autoload.php';
 require_once __DIR__ . '/endpoint.class.php';
 require_once __DIR__ . '/oidc-wrapper.class.php';
 require_once __DIR__ . '/utils.php';
+require_once __DIR__ . '/wordpress-auth-session.php';
 
 function init_plugin(): void {
     log( 'Init plugin' );
