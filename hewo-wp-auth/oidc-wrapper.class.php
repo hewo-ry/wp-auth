@@ -3,14 +3,17 @@
 namespace Hewo\WpAuth;
 
 use Exception;
+use Facile\JoseVerifier\JWK\JwksProviderBuilder;
 use Facile\OpenIDClient\Client\ClientBuilder;
 use Facile\OpenIDClient\Client\ClientInterface;
 use Facile\OpenIDClient\Client\Metadata\ClientMetadata;
 use Facile\OpenIDClient\Issuer\IssuerBuilder;
+use Facile\OpenIDClient\Issuer\Metadata\Provider\MetadataProviderBuilder;
 use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Http\Discovery\Psr17Factory;
+use Phpfastcache\Helper\Psr16Adapter;
 use Throwable;
 use WP_REST_Request;
 use WP_Roles;
@@ -47,10 +50,20 @@ final class OidcWrapper {
 
         $openidConfigurationUrl = HEWO_WP_AUTH_ISSUER . '/.well-known/openid-configuration';
 
-        log( 'Fetch issuer details: ' . $openidConfigurationUrl );
+        log( 'Fetch issuer details (cache enabled): ' . $openidConfigurationUrl );
 
-        // TODO: cache?
+        $cache = new Psr16Adapter( 'Files' );
+
+        $metadataProviderBuilder = ( new MetadataProviderBuilder() )
+            ->setCache( $cache )
+            ->setCacheTtl( 3600 );
+        $jwksProviderBuilder = ( new JwksProviderBuilder() )
+            ->withCache( $cache )
+            ->withCacheTtl( 3600 );
+
         $issuer = ( new IssuerBuilder() )
+            ->setMetadataProviderBuilder( $metadataProviderBuilder )
+            ->setJwksProviderBuilder( $jwksProviderBuilder )
             ->build( $openidConfigurationUrl );
 
         log( 'Client ID: ' . HEWO_WP_AUTH_CLIENT_ID );
