@@ -7,7 +7,7 @@
             "request": "launch",
             "pathMappings": {
                 "/var/www/html/wp-content/mu-plugins/hewo-wp-auth": "${workspaceRoot}/hewo-wp-auth",
-            }
-        }
-    ]
+            },
+        },
+    ],
 }

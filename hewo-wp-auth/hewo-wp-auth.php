@@ -26,42 +26,42 @@ require_once __DIR__ . '/oidc-wrapper.class.php';
 require_once __DIR__ . '/utils.php';
 
 function init_plugin(): void {
-	log( 'Init plugin' );
+    log( 'Init plugin' );
 
-	if ( ! defined( 'HEWO_WP_AUTH_ISSUER' ) ) {
-		log( 'HEWO_WP_AUTH_ISSUER is missing' );
-		return;
-	}
-	if ( ! defined( 'HEWO_WP_AUTH_CLIENT_ID' ) ) {
-		log( 'HEWO_WP_AUTH_CLIENT_ID is missing' );
-		return;
-	}
-	if ( ! defined( 'HEWO_WP_AUTH_CLIENT_SECRET' ) ) {
-		log( 'HEWO_WP_AUTH_CLIENT_SECRET is missing' );
-		return;
-	}
+    if ( ! defined( 'HEWO_WP_AUTH_ISSUER' ) ) {
+        log( 'HEWO_WP_AUTH_ISSUER is missing' );
+        return;
+    }
+    if ( ! defined( 'HEWO_WP_AUTH_CLIENT_ID' ) ) {
+        log( 'HEWO_WP_AUTH_CLIENT_ID is missing' );
+        return;
+    }
+    if ( ! defined( 'HEWO_WP_AUTH_CLIENT_SECRET' ) ) {
+        log( 'HEWO_WP_AUTH_CLIENT_SECRET is missing' );
+        return;
+    }
 
-	add_action( 'admin_menu', 'Hewo\WpAuth\admin_menu' );
-	add_action( 'login_url', 'Hewo\WpAuth\login_url' );
-	// TODO: override wp-login.php ?
+    add_action( 'admin_menu', 'Hewo\WpAuth\admin_menu' );
+    add_action( 'login_url', 'Hewo\WpAuth\login_url' );
+    // TODO: override wp-login.php ?
 
-	add_action( 'rest_api_init', Endpoint::instance()->init( ... ) );
+    add_action( 'rest_api_init', Endpoint::instance()->init( ... ) );
 }
 
 add_action( 'init', 'Hewo\WpAuth\init_plugin' );
 
 function admin_menu(): void {
-	log( 'Set up admin_menu' );
+    log( 'Set up admin_menu' );
 
-	remove_menu_page( 'users.php' );
+    remove_menu_page( 'users.php' );
 }
 
 
 function login_url() {
-	$login_url = OidcWrapper::instance()->getAuthorizationUrl();
+    $login_url = OidcWrapper::instance()->getAuthorizationUrl();
 
-	log( 'Created login url: ' . $login_url );
+    log( 'Created login url: ' . $login_url );
 
-	return $login_url;
+    return $login_url;
 }
 
