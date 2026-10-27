@@ -13,6 +13,7 @@ use Facile\OpenIDClient\Service\AuthorizationService;
 use Facile\OpenIDClient\Service\Builder\AuthorizationServiceBuilder;
 use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Http\Discovery\Psr17Factory;
+use Jose\Component\Checker\InvalidClaimException;
 use Phpfastcache\Helper\Psr16Adapter;
 use Throwable;
 use WP_REST_Request;
@@ -27,6 +28,7 @@ final class OidcWrapper {
 
     private AuthorizationService $authorizationService;
     private ClientInterface $client;
+    private WordPressAuthSession $authSession;
 
     private bool $useSsl = true;
 
@@ -86,12 +88,20 @@ final class OidcWrapper {
 
         $this->authorizationService = ( new AuthorizationServiceBuilder() )
             ->build();
+
+        $this->authSession = new WordPressAuthSession();
     }
 
     public function getAuthorizationUrl(): string {
+        $this->authSession->setNonce( wp_generate_password( 32, false ) );
+        $this->authSession->setState( wp_generate_password( 32, false ) );
         return $this->authorizationService
             ->getAuthorizationUri(
                 $this->client,
+                [
+                    'nonce' => $this->authSession->getNonce(),
+                    'state' => $this->authSession->getState(),
+                ]
             );
     }
 
@@ -110,7 +120,16 @@ final class OidcWrapper {
                 ->getCallbackParams( $serverRequest, $this->client );
 
             $tokenSet = $this->authorizationService
-                ->callback( $this->client, $callbackParams );
+                ->callback( $this->client, $callbackParams, null, $this->authSession );
+
+            if ( $callbackParams['state'] !== $this->authSession->getState() )
+                throw new InvalidClaimException(
+                    sprintf( 'State mismatch, expected %s, got: %s', $this->authSession->getState(), (string) $callbackParams['state'] ),
+                    'state',
+                    $callbackParams['state']
+                );
+
+            $this->authSession->clear();
 
             $userInfo = ( new UserInfoServiceBuilder() )
                 ->build()
