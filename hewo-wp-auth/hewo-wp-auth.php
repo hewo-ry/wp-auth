@@ -47,6 +47,9 @@ function init_plugin(): void {
     // TODO: override wp-login.php ?
 
     add_action( 'rest_api_init', Endpoint::instance()->init( ... ) );
+
+    add_filter( 'allowed_redirect_hosts', 'Hewo\WpAuth\allowed_redirect_hosts' );
+    add_filter( 'logout_redirect', 'Hewo\WpAuth\logout_url', 10, 3 );
 }
 
 add_action( 'init', 'Hewo\WpAuth\init_plugin' );
@@ -57,8 +60,14 @@ function admin_menu(): void {
     remove_menu_page( 'users.php' );
 }
 
+function allowed_redirect_hosts( array $hosts ): array {
+    return array_merge(
+        $hosts,
+        OidcWrapper::instance()->getAllowedHosts(),
+    );
+}
 
-function login_url() {
+function login_url(): string {
     $login_url = OidcWrapper::instance()->getAuthorizationUrl();
 
     log( 'Created login url: ' . $login_url );
@@ -66,3 +75,10 @@ function login_url() {
     return $login_url;
 }
 
+function logout_url( $redirect_to, $requested_redirect_to, $user ): string {
+    $logout_url = OidcWrapper::instance()->getLogoutUrl( $user->ID );
+
+    log( 'Created logout url:' . $logout_url );
+
+    return $logout_url;
+}
