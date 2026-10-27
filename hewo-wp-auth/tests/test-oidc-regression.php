@@ -147,9 +147,20 @@ class OidcRegressionTest extends WP_UnitTestCase {
     }
 
     public function test_auth_callback_route_is_registered_as_public_get_endpoint(): void {
-        Endpoint::instance()->init();
+        // Endpoint::init() resolves the OidcWrapper singleton, which would otherwise need real config and network.
+        $instanceProperty = ( new ReflectionClass( OidcWrapper::class ) )->getProperty( 'instance' );
+        $originalInstance = $instanceProperty->getValue();
+        $instanceProperty->setValue( null, $this->createWrapper() );
 
-        $routes = rest_get_server()->get_routes();
+        add_action( 'rest_api_init', array( Endpoint::instance(), 'init' ) );
+
+        try {
+            $routes = rest_get_server()->get_routes();
+        } finally {
+            $instanceProperty->setValue( null, $originalInstance );
+        }
+
+        $this->assertArrayHasKey( '/hewo-auth/v0/auth/callback', $routes );
         $route = $routes['/hewo-auth/v0/auth/callback'];
 
         $this->assertArrayHasKey( 'GET', $route[0]['methods'] );
@@ -172,7 +183,7 @@ class OidcRegressionTest extends WP_UnitTestCase {
 
         $reloadedSession->clear();
 
-        $this->assertNull( get_transient( 'hewo_wp_auth_session_' . $this->sessionCookie ) );
+        $this->assertFalse( get_transient( 'hewo_wp_auth_session_' . $this->sessionCookie ) );
         $this->expectException( \Exception::class );
         $reloadedSession->getState();
     }
