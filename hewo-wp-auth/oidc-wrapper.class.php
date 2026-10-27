@@ -13,6 +13,7 @@ use Facile\OpenIDClient\Service\Builder\UserInfoServiceBuilder;
 use Http\Discovery\Psr17Factory;
 use Throwable;
 use WP_REST_Request;
+use WP_Roles;
 use WP_User;
 
 final class OidcWrapper {
@@ -215,7 +216,13 @@ final class OidcWrapper {
     }
 
     private function parseRole( array $userInfo ): string {
-        // TODO
+        global $wp_roles;
+        /** @var WP_Roles $wp_roles */
+
+        foreach ( $userInfo['resource_access'][ $this->client->getMetadata()->getClientId()]['roles'] ?? [] as $role )
+            if ( $wp_roles->is_role( $role ) )
+                return $role;
+
         return 'subscriber';
     }
 }
