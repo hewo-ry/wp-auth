@@ -17,27 +17,16 @@ class OidcRegressionTest extends WP_UnitTestCase {
 
     private string $sessionCookie;
 
-    private bool $hadSessionCookie;
-
-    private $originalSessionCookie;
-
     protected function setUp(): void {
         parent::setUp();
 
-        $this->hadSessionCookie = isset( $_COOKIE['hewo_wp_auth_session_id'] );
-        $this->originalSessionCookie = $_COOKIE['hewo_wp_auth_session_id'] ?? null;
         $this->sessionCookie = wp_generate_password( 32, false );
         $_COOKIE['hewo_wp_auth_session_id'] = $this->sessionCookie;
     }
 
     protected function tearDown(): void {
         delete_transient( 'hewo_wp_auth_session_' . $this->sessionCookie );
-
-        if ( $this->hadSessionCookie ) {
-            $_COOKIE['hewo_wp_auth_session_id'] = $this->originalSessionCookie;
-        } else {
-            unset( $_COOKIE['hewo_wp_auth_session_id'] );
-        }
+        unset( $_COOKIE['hewo_wp_auth_session_id'] );
 
         parent::tearDown();
     }
@@ -58,7 +47,7 @@ class OidcRegressionTest extends WP_UnitTestCase {
         $this->assertSame( 32, strlen( $query['state'] ) );
         $this->assertSame( 32, strlen( $query['nonce'] ) );
 
-        $session = new WordPressAuthSession();
+        $session = $this->getAuthSession( $wrapper );
         $this->assertSame( $query['state'], $session->getState() );
         $this->assertSame( $query['nonce'], $session->getNonce() );
     }
@@ -76,6 +65,11 @@ class OidcRegressionTest extends WP_UnitTestCase {
         $this->assertSame( home_url( '/' ), $query['post_logout_redirect_uri'] );
         $this->assertSame( 'stored-id-token', $query['id_token_hint'] );
         $this->assertSame( 'example', $query['tenant'] );
+    }
+
+    public function test_allowed_hosts_include_oidc_logout_host(): void {
+        $wrapper = $this->createWrapper();
+
         $this->assertSame( array( 'identity.example' ), $wrapper->getAllowedHosts() );
     }
 
@@ -244,5 +238,11 @@ class OidcRegressionTest extends WP_UnitTestCase {
     private function setPrivateProperty( object $object, string $propertyName, mixed $value ): void {
         $property = ( new ReflectionClass( $object ) )->getProperty( $propertyName );
         $property->setValue( $object, $value );
+    }
+
+    private function getAuthSession( OidcWrapper $wrapper ): WordPressAuthSession {
+        $property = ( new ReflectionClass( $wrapper ) )->getProperty( 'authSession' );
+
+        return $property->getValue( $wrapper );
     }
 }
